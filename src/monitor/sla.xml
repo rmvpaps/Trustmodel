@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<!--
+Simple SLA for the Stock Quote Service.
+Author: Heiko Ludwig, hludwig@us.ibm.com
+Date: October 24, 2001
+-->
+<SLA
+xmlns="http://www.ibm.com/wsla"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.ibm.com/wsla c:\Projects\WSLA\wsla.xsd"
+name="StockquoteServiceAgreement12345" >
+<Parties>
+<ServiceProvider
+name="provider">
+<Contact>
+<POBox>P.O.Box 218</POBox>
+<City>Yorktown, NY 10598, USA</City>
+</Contact>
+<Action xsi:type="WSDLSOAPActionDescriptionType"
+name="Notification"
+partyName="provider">
+<WSDLFile>Notification.wsdl</WSDLFile>
+<SOAPBindingName>SOAPNotificationBinding</SOAPBindingName>
+<SOAPOperationName>Notify</SOAPOperationName>
+</Action>
+</ServiceProvider>
+<ServiceCustomer
+name="customer">
+<Contact>
+<Street>30 Saw Mill River RD</Street>
+<City>Hawthorne, NY 10532, USA</City>
+</Contact>
+<Action xsi:type="WSDLSOAPActionDescriptionType"
+name="Notification"
+partyName="customer">
+<WSDLFile>Notification.wsdl</WSDLFile>
+<SOAPBindingName>SOAPNotificationBinding</SOAPBindingName>
+<SOAPOperationName>Notify</SOAPOperationName>
+</Action>
+</ServiceCustomer>
+<SupportingParty
+name="ms"
+role="MeasurementServiceProvider"
+sponsor="provider">
+<Contact>
+<Street>Saeumerstrasse 4</Street>
+<City>CH-8803 Ruschlikon, Switzerland</City>
+</Contact>
+</SupportingParty>
+</Parties>
+<ServiceDefinition
+name="StockQuoteservice">
+<Operation xsi:type="wsla:WSDLSOAPOperationDescriptionType"
+name="WSDLSOAPGetQuote">
+<Schedule name="MainSchedule">
+<Period>
+<Start>2001-11-30T14:00:00.000-05:00</Start>
+<End>2001-12-31T14:00:00.000-05:00</End>
+</Period>
+<Interval>
+<Minutes>2</Minutes>
+<Seconds>30</Seconds>
+</Interval>
+</Schedule>
+<SLAParameter name="AverageResponseTime"
+type="float"
+unit="seconds">
+<Metric>averageResponseTime</Metric>
+</SLAParameter>
+<Metric name="averageResponseTime" type="double" unit="seconds">
+<Source>ms</Source>
+<Function xsi:type="wsla:Divide" resultType="double">
+<Operand>
+<Function xsi:type="wsla:Plus" resultType="double">
+<Operand>
+<Metric>averageResponseTimeHost1</Metric>
+</Operand>
+<Operand>
+<Metric>averageResponseTimeHost2</Metric>
+</Operand>
+</Function>
+</Operand>
+<Operand>
+<LongScalar>2</LongScalar>
+</Operand>
+</Function>
+</Metric>
+<Metric name="averageResponseTimeHost1" type="double" unit="seconds">
+<Source>ms</Source>
+<Function xsi:type="wsla:Mean" resultType="double">
+<Metric>responseTimesHost1</Metric>
+</Function>
+</Metric>
+<Metric name="responseTimesHost1" type="TS" unit="seconds">
+<Source>ms</Source>
+<Function xsi:type="wsla:TSConstructor" resultType="TS">
+<Schedule>MainSchedule</Schedule>
+<Metric>responseTimeHost1</Metric>
+</Function>
+</Metric>
+<Metric name="responseTimeHost1" type="double" unit="seconds">
+<Source>ms</Source>
+<MeasurementDirective xsi:type="wsla:ResponseTime"
+resultType="double">
+<MeasurementURI>http://ms.com/testResponse</MeasurementURI>
+</MeasurementDirective>
+</Metric>
+<Metric name="averageResponseTimeHost2" type="double" unit="seconds">
+<Source>ms</Source>
+<Function xsi:type="wsla:Mean" resultType="double">
+<Metric>responseTimesHost2</Metric>
+</Function>
+</Metric>
+<Metric name="responseTimesHost2" type="TS" unit="seconds">
+<Source>ms</Source>
+<Function xsi:type="wsla:TSConstructor" resultType="TS">
+<Schedule>MainSchedule</Schedule>
+<Metric>ResponseTimeHost2</Metric>
+</Function>
+</Metric>
+<Metric name="responseTimeHost2" type="double" unit="seconds">
+<Source>ms</Source>
+<MeasurementDirective xsi:type="wsla:ResponseTime"
+resultType="double">
+<MeasurementURI>http://ms.com/testResponse</MeasurementURI>
+</MeasurementDirective>
+</Metric>
+<WSDLFile>StockQuoteService.wsdl</WSDLFile>
+<SOAPBindingName>SOAPNotificationBinding</SOAPBindingName>
+<SOAPOperationName>getQuote</SOAPOperationName>
+</Operation>
+</ServiceDefinition>
+<Obligations>
+<ServiceLevelObjective name="g1" serviceObject="WSDLSOAPGetQuote">
+<Obliged>provider</Obliged>
+<Validity>
+<StartDate>2001-08-15:1400</StartDate>
+<EndDate>2001-09-15:1400</EndDate>
+</Validity>
+<Expression>
+<Predicate xsi:type="wsla:Less">
+<SLAParameter>AverageResponseTime</SLAParameter>
+<Value>5</Value>
+</Predicate>
+</Expression>
+<EvaluationEvent>NewValue</EvaluationEvent>
+</ServiceLevelObjective>
+<ActionGuarantee name="g2">
+<Obliged>ms</Obliged>
+<Expression>
+<Predicate xsi:type="wsla:Violation">
+<ServiceLevelObjective>g1</ServiceLevelObjective>
+</Predicate>
+</Expression>
+<EvaluationEvent>NewValue</EvaluationEvent>
+<QualifiedAction>
+<Party>customer</Party>
+<Action actionName="notification" xsi:type="Notification">
+<NotificationType>Violation</NotificationType>
+<CausingGuarantee>g1</CausingGuarantee>
+<SLAParameter>AverageResponseTime</SLAParameter>
+</Action>
+</QualifiedAction>
+<ExecutionModality>Always</ExecutionModality>
+</ActionGuarantee>
+<ActionGuarantee name="g3">
+<Obliged>ms</Obliged>
+<Expression>
+<Predicate xsi:type="wsla:Less">
+<SLAParameter>AverageResponseTime</SLAParameter>
+<Value>4</Value>
+</Predicate>
+</Expression>
+<EvaluationEvent>NewValue</EvaluationEvent>
+<QualifiedAction>
+<Party>customer</Party>
+<Action actionName="notification" xsi:type="Notification">
+<NotificationType>Violation</NotificationType>
+<CausingGuarantee>g1</CausingGuarantee>
+<SLAParameter>AverageResponseTime</SLAParameter>
+</Action>
+</QualifiedAction>
+<QualifiedAction>
+<Party>provider</Party>
+<Action actionName="notification" xsi:type="Notification">
+<NotificationType>Violation</NotificationType>
+<CausingGuarantee>g1</CausingGuarantee>
+<SLAParameter>AverageResponseTime</SLAParameter>
+</Action>
+</QualifiedAction>
+<ExecutionModality>OnEnteringAndOnLeavingCondition</ExecutionModality>
+</ActionGuarantee>
+</Obligations>
+</SLA>
